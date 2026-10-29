@@ -36,8 +36,8 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh 'docker compose down || true'
-                sh 'docker compose up -d'
+                sh 'docker compose -f docker-compose-part2.yml down || true'
+                sh 'docker compose -f docker-compose-part2.yml up -d'
             }
         }
 
@@ -52,7 +52,7 @@ pipeline {
                         sleep 5
                     done
                     echo "App did not become healthy"
-                    docker compose logs --tail=50
+                    docker compose -f docker-compose-part2.yml logs --tail=50
                     exit 1
                 '''
             }
