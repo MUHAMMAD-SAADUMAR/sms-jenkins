@@ -1,0 +1,44 @@
+name: sms2
+
+services:
+  db:
+    image: mysql:8.4
+    container_name: sms2_db
+    restart: unless-stopped
+    command: --performance-schema=OFF --innodb-buffer-pool-size=64M
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: sms
+      MYSQL_USER: sms_app
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - sms2_db_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    ports:
+      - "3308:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      retries: 30
+
+  web:
+    image: msaadumar/sms-web:v1
+    container_name: sms2_web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: jenkins
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: sms
+      DB_USER: sms_app
+      DB_PASS: ${DB_PASSWORD}
+    volumes:
+      - ./app:/var/www/html:ro
+    ports:
+      - "8086:80"
+
+volumes:
+  sms2_db_data:
